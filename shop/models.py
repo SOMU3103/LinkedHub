@@ -400,3 +400,27 @@ class Notification(models.Model):
         return f"{self.user.username} - {self.message[:50]}"
 
 #----------------------------------------------------------------------------------
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
+
+# Add these signal handlers at the end of models.py
+
+@receiver(pre_delete, sender=Profile)
+def delete_profile_images(sender, instance, **kwargs):
+    """Delete profile images from S3 when profile is deleted"""
+    if instance.profile_picture:
+        instance.profile_picture.delete(save=False)
+    if instance.banner_image:
+        instance.banner_image.delete(save=False)
+
+@receiver(pre_delete, sender=Document)
+def delete_document_file(sender, instance, **kwargs):
+    """Delete document file from S3 when document is deleted"""
+    if instance.file:
+        instance.file.delete(save=False)
+
+@receiver(pre_delete, sender=StudyMaterial)
+def delete_study_material_file(sender, instance, **kwargs):
+    """Delete study material file from S3 when deleted"""
+    if instance.file:
+        instance.file.delete(save=False)

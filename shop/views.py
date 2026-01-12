@@ -195,88 +195,118 @@ def public_profile_view(request, username):
 #----------------------------------------------------------------
 @login_required
 def edit_profile(request):
-    if request.method == 'POST':
-        profile, created = Profile.objects.get_or_create(user=request.user)
-        
-        # ADD THIS CODE HERE - Handle image deletions FIRST
-        if request.POST.get('delete_profile_picture') == 'true':
-            if profile.profile_picture:
-                profile.profile_picture.delete()
-                profile.profile_picture = None
-
-        if request.POST.get('delete_banner_image') == 'true':
-            if profile.banner_image:
-                profile.banner_image.delete()
-                profile.banner_image = None
-        
-        # Then handle your existing form processing
-        # Update user fields
-        request.user.first_name = request.POST.get('first_name', '')
-        request.user.last_name = request.POST.get('last_name', '')
-        request.user.save()
-        
-        # Update profile fields
-        profile.location = request.POST.get('location', '')
-        profile.phone = request.POST.get('phone', '')
-        profile.website = request.POST.get('website', '')
-        profile.bio = request.POST.get('bio', '')
-        
-        # Handle new file uploads (only if not being deleted)
-        if 'profile_picture' in request.FILES:
-            profile.profile_picture = request.FILES['profile_picture']
-        if 'banner_image' in request.FILES:
-            profile.banner_image = request.FILES['banner_image']
-            
-        profile.save()
-        
-        messages.success(request, 'Profile updated successfully!')
-        return redirect('shop/account_settings.html')
-    
-    # GET request handling...
-
-# -------------------- Profile Management --------------------
-
-@login_required
-@require_POST
-def edit_profile(request):
-    """Handle profile editing"""
+    """Handle profile editing - works for both GET and POST"""
     profile, created = Profile.objects.get_or_create(user=request.user)
     
-    try:
-        # Update user information
-        request.user.first_name = request.POST.get('first_name', '').strip()
-        request.user.last_name = request.POST.get('last_name', '').strip()
-        request.user.email = request.POST.get('email', '').strip()
-        request.user.save()
+    if request.method == 'POST':
+        try:
+            # Debug logging
+            logger.info(f"POST data received: {request.POST}")
+            logger.info(f"delete_profile_picture: {request.POST.get('delete_profile_picture')}")
+            logger.info(f"delete_banner_image: {request.POST.get('delete_banner_image')}")
+            
+            # Handle profile picture deletion FIRST
+            if request.POST.get('delete_profile_picture') == 'true':
+                logger.info("Attempting to delete profile picture")
+                if profile.profile_picture:
+                    try:
+                        # Delete the file from storage
+                        profile.profile_picture.delete(save=False)
+                        profile.profile_picture = None
+                        profile.save()
+                        logger.info("Profile picture deleted successfully")
+                        messages.success(request, 'Profile picture deleted successfully!')
+                    except Exception as e:
+                        logger.error(f"Error deleting profile picture: {str(e)}")
+                        messages.error(request, f'Error deleting profile picture: {str(e)}')
+                else:
+                    messages.warning(request, 'No profile picture to delete.')
+                return redirect('account_settings')
+
+            # Handle banner image deletion FIRST
+            if request.POST.get('delete_banner_image') == 'true':
+                logger.info("Attempting to delete banner image")
+                if profile.banner_image:
+                    try:
+                        # Delete the file from storage
+                        profile.banner_image.delete(save=False)
+                        profile.banner_image = None
+                        profile.save()
+                        logger.info("Banner image deleted successfully")
+                        messages.success(request, 'Banner image deleted successfully!')
+                    except Exception as e:
+                        logger.error(f"Error deleting banner image: {str(e)}")
+                        messages.error(request, f'Error deleting banner image: {str(e)}')
+                else:
+                    messages.warning(request, 'No banner image to delete.')
+                return redirect('account_settings')
+            
+            # Update user information
+            request.user.first_name = request.POST.get('first_name', '').strip()
+            request.user.last_name = request.POST.get('last_name', '').strip()
+            request.user.save()
+            
+            # Update profile information
+            profile.location = request.POST.get('location', '').strip()
+            profile.phone = request.POST.get('phone', '').strip()
+            profile.website = request.POST.get('website', '').strip()
+            profile.bio = request.POST.get('bio', '').strip()
+            
+            # Handle profile picture upload
+            if request.FILES.get('profile_picture'):
+                new_file = request.FILES['profile_picture']
+                
+                # Validate file size (2MB limit)
+                max_size = 2 * 1024 * 1024  # 2MB in bytes
+                if new_file.size > max_size:
+                    messages.error(request, 'Profile picture must be less than 2MB.')
+                    return redirect('account_settings')
+                
+                # Delete old profile picture if exists
+                if profile.profile_picture:
+                    try:
+                        profile.profile_picture.delete(save=False)
+                        logger.info("Old profile picture deleted before upload")
+                    except Exception as e:
+                        logger.error(f"Error deleting old profile picture: {str(e)}")
+                
+                # Save new profile picture
+                profile.profile_picture = new_file
+                logger.info("New profile picture uploaded")
+            
+            # Handle banner image upload
+            if request.FILES.get('banner_image'):
+                new_file = request.FILES['banner_image']
+                
+                # Validate file size (2MB limit)
+                max_size = 2 * 1024 * 1024  # 2MB in bytes
+                if new_file.size > max_size:
+                    messages.error(request, 'Banner image must be less than 2MB.')
+                    return redirect('account_settings')
+                
+                # Delete old banner image if exists
+                if profile.banner_image:
+                    try:
+                        profile.banner_image.delete(save=False)
+                        logger.info("Old banner image deleted before upload")
+                    except Exception as e:
+                        logger.error(f"Error deleting old banner image: {str(e)}")
+                
+                # Save new banner image
+                profile.banner_image = new_file
+                logger.info("New banner image uploaded")
+            
+            profile.save()
+            messages.success(request, 'Profile updated successfully!')
+            
+        except Exception as e:
+            logger.error(f"Error updating profile: {str(e)}", exc_info=True)
+            messages.error(request, f'Error updating profile: {str(e)}')
         
-        # Update profile information
-        profile.title = request.POST.get('title', '').strip()
-        profile.location = request.POST.get('location', '').strip()
-        profile.bio = request.POST.get('bio', '').strip()
-        profile.phone = request.POST.get('phone', '').strip()
-        profile.website = request.POST.get('website', '').strip()
-        
-        # Handle profile picture upload
-        if request.FILES.get('profile_picture'):
-            # Delete old profile picture if exists
-            if profile.profile_picture:
-                default_storage.delete(profile.profile_picture.name)
-            profile.profile_picture = request.FILES['profile_picture']
-        
-        # Handle banner image upload
-        if request.FILES.get('banner_image'):
-            # Delete old banner image if exists
-            if profile.banner_image:
-                default_storage.delete(profile.banner_image.name)
-            profile.banner_image = request.FILES['banner_image']
-        
-        profile.save()
-        messages.success(request, 'Profile updated successfully!')
-        
-    except Exception as e:
-        messages.error(request, f'Error updating profile: {str(e)}')
+        return redirect('account_settings')
     
-    return redirect('profile')
+    # GET request - show the form
+    return redirect('account_settings')
 
 
 # -------------------- Account Settings --------------------
@@ -315,6 +345,7 @@ def increment_profile_views(request):
 
 # -------------------- Document Management --------------------
 
+
 @login_required
 @require_POST
 def upload_document(request):
@@ -342,7 +373,7 @@ def upload_document(request):
             messages.error(request, 'File type not allowed. Please upload PDF, DOC, DOCX, JPG, or PNG files.')
             return redirect('profile')
         
-        # Create document
+        # Create document - S3 upload happens automatically
         document = Document.objects.create(
             user=request.user,
             title=title,
@@ -355,6 +386,7 @@ def upload_document(request):
         messages.success(request, 'Document uploaded successfully!')
         
     except Exception as e:
+        logger.error(f"Error uploading document: {str(e)}", exc_info=True)
         messages.error(request, f'Error uploading document: {str(e)}')
     
     return redirect('profile')
@@ -367,15 +399,12 @@ def delete_document(request, document_id):
     document = get_object_or_404(Document, id=document_id, user=request.user)
     
     try:
-        # Delete the file from storage
-        if document.file:
-            default_storage.delete(document.file.name)
-        
-        # Delete the document record
+        # Delete the file from S3 (this happens automatically with the model delete)
         document.delete()
         messages.success(request, 'Document deleted successfully!')
         
     except Exception as e:
+        logger.error(f"Error deleting document: {str(e)}", exc_info=True)
         messages.error(request, f'Error deleting document: {str(e)}')
     
     return redirect('profile')
@@ -1069,18 +1098,16 @@ def delete_study_material(request, material_id):
     material = get_object_or_404(StudyMaterial, id=material_id, user=request.user)
     
     try:
-        # Delete the file from storage
-        if material.file:
-            default_storage.delete(material.file.name)
-        
-        # Delete the material record
+        # Django will automatically delete the file from S3
         material.delete()
         messages.success(request, 'Study material deleted successfully!')
         
     except Exception as e:
+        logger.error(f"Error deleting material: {str(e)}", exc_info=True)
         messages.error(request, f'Error deleting material: {str(e)}')
     
     return redirect('my_uploads')
+
 
 @login_required
 def edit_study_material(request, material_id):
@@ -1098,9 +1125,9 @@ def edit_study_material(request, material_id):
             
             # Handle file update if provided
             if request.FILES.get('file'):
-                # Delete old file if exists
+                # Delete old file from S3
                 if material.file:
-                    default_storage.delete(material.file.name)
+                    material.file.delete(save=False)
                 material.file = request.FILES['file']
             
             material.full_clean()
@@ -1112,6 +1139,7 @@ def edit_study_material(request, material_id):
         except ValidationError as e:
             messages.error(request, f'Validation error: {", ".join(e.messages)}')
         except Exception as e:
+            logger.error(f"Error updating material: {str(e)}", exc_info=True)
             messages.error(request, f'Error updating material: {str(e)}')
     
     # For GET requests or failed POST, show the edit form

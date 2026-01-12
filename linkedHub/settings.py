@@ -15,32 +15,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = config('DEBUG', default=True, cast=bool)
 
 #-------------------------------------------------------------------------------------------------------
-PRODUCTION_HOSTS = [
-    'linkedhub-0ki0.onrender.com',
-    os.environ.get('RENDER_EXTERNAL_HOSTNAME', '')  # Render's internal host
-]
-ALLOWED_HOSTS = PRODUCTION_HOSTS if not DEBUG else ['localhost', '127.0.0.1']
-ALLOWED_HOSTS = [h for h in ALLOWED_HOSTS if h] 
-
-# Add wildcard for Render preview deployments
-if os.environ.get('RENDER_SERVICE_ID'):
-    ALLOWED_HOSTS.append('*.onrender.com')
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 #-------------------------------------------------------------------------------------------------------
-# Security settings for production
-if not DEBUG:
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# Security settings - disabled for local development
+SECURE_BROWSER_XSS_FILTER = False
+SECURE_CONTENT_TYPE_NOSNIFF = False
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 
 #-----------------------------------------------------------
 PASSWORD_HASHERS = [
@@ -71,13 +57,16 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     
+    # S3 Storage
+    'storages',
+    
     # Local apps
     'shop',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add for static files
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django_otp.middleware.OTPMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -106,31 +95,17 @@ TEMPLATES = [{
 
 WSGI_APPLICATION = 'linkedHub.wsgi.application'
 
-# Database - Using dj-database-url for Render compatibility
-# Database - Using dj-database-url for Render compatibility
-DATABASE_URL = config('DATABASE_URL', default=None)
-
-if DATABASE_URL:
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            conn_health_checks=True,
-            ssl_require=True,  # Add SSL requirement
-        )
+# Database - Local PostgreSQL
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='linkedhub'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default=''),
+        'HOST': config('DB_HOST', default='127.0.0.1'),
+        'PORT': config('DB_PORT', default='5432'),
     }
-else:
-    # Local development fallback
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('DB_NAME', default='linkedhub'),
-            'USER': config('DB_USER', default='postgres'),
-            'PASSWORD': config('DB_PASSWORD', default=''),
-            'HOST': config('DB_HOST', default='127.0.0.1'),
-            'PORT': config('DB_PORT', default='5432'),
-        }
-    }
+}
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -161,35 +136,51 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
-'''# Ensure static directory exists
-static_dir = os.path.join(BASE_DIR, 'static')
-if os.path.exists(static_dir):
-    STATICFILES_DIRS = [static_dir]
-else:
-    STATICFILES_DIRS = []
-'''
-# WhiteNoise configuration
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-# Enable gzip and cache support
-#-----------------------------------------------------------------------------------
-WHITENOISE_MAX_AGE = 31536000 if not DEBUG else 0  # 1 year for production
-WHITENOISE_USE_FINDERS = True
-WHITENOISE_MANIFEST_STRICT = False
-#-------------------------------------------------------------------------------
-if not DEBUG:
-    # WhiteNoise doesn't serve media files by default
-    # You need to handle media files separately
-    WHITENOISE_USE_FINDERS = True
-    WHITENOISE_AUTOREFRESH = True
+
+# WhiteNoise configuration for static files
+#STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+#WHITENOISE_MAX_AGE = 0  # No caching for development
+#WHITENOISE_USE_FINDERS = True
+#WHITENOISE_MANIFEST_STRICT = False
+
 # Add static file finders
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 
-# Media files
-MEDIA_URL = '/images/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Storage configuration - IMPORTANT: Separate static and media
+
+# Try with simpler WhiteNoise storage first
+STORAGES = {
+    "default": {  # For media files (user uploads)
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+    "staticfiles": {  # For static files - simpler version without manifest
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
+
+# WhiteNoise configuration
+WHITENOISE_MANIFEST_STRICT = False  # Don't fail on missing files
+WHITENOISE_AUTOREFRESH = False  # No auto-refresh in production
+WHITENOISE_MAX_AGE = 31536000  # Cache static files for 1 year
+
+# AWS S3 Settings for Media Files ONLY
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='us-east-1')
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+AWS_S3_FILE_OVERWRITE = False
+AWS_QUERYSTRING_AUTH = False
+
+# Media files configuration - S3 for user uploads
+MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -202,8 +193,8 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-# Allauth settings - Fixed SITE_ID
-SITE_ID = 3
+# Allauth settings
+SITE_ID = 2  # Changed to 1 for local development
 
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = 'send_otp'
@@ -284,28 +275,13 @@ LOGGING = {
     },
     'root': {
         'handlers': ['console'],
-        'level': 'INFO' if DEBUG else 'WARNING',
+        'level': 'DEBUG',
     },
     'loggers': {
         'django.db.backends': {
-            'level': 'ERROR',  # Reduce database logging
+            'level': 'INFO',
             'handlers': ['console'],
             'propagate': False,
         },
     },
 }
-
-# Cache configuration for production
-if not DEBUG:
-    CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-            'LOCATION': 'cache_table',
-        }
-    }
-    #---------------
-if DEBUG:
-    LOGGING['loggers']['whitenoise'] = {
-        'level': 'DEBUG',
-        'handlers': ['console'],
-    }

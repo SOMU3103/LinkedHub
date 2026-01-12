@@ -7,15 +7,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Account Settings - {{ user.get_full_name|default:user.username }}</title>
     <link rel="icon" type="image/png" href="{% static 'images/aim.ico' %}">
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/account_settings.css' %}">
 </head>
 
 <body>
-    <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container">
             <a class="navbar-brand" href="{% url 'home' %}">
@@ -68,18 +65,31 @@
                     </div>
                 </div>
             </div>
-
+            
             <div class="col-md-9">
                 <div class="settings-card">
                     <div class="tab-content">
-                        <!-- Profile Settings Tab -->
                         <div class="tab-pane fade show active" id="profile">
                             <div class="card-header">
                                 <h5 class="mb-0">Profile Settings</h5>
                             </div>
+                            <!-- Fixed Alert Messages - No slider effect -->
+                            {% if messages %}
+                              <div class="alert-container">
+                                {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }}" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'" aria-label="Close">&times;</button>
+                                </div>
+                                {% endfor %}
+                              </div>
+                            {% endif %}
+                            <!-- Fixed Alert Messages - No slider effect -->
+
                             <div class="card-body">
-                                <form method="post" action="{% url 'edit_profile' %}" enctype="multipart/form-data">
+                                <form method="post" action="{% url 'edit_profile' %}" enctype="multipart/form-data" id="profileForm">
                                     {% csrf_token %}
+                                    
                                     <div class="form-section">
                                         <h6 class="section-title">Basic Information</h6>
                                         <div class="row">
@@ -124,21 +134,41 @@
 
                                     <div class="form-section">
                                         <h6 class="section-title">Profile Images</h6>
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label for="profile_picture" class="form-label">Profile Picture</label>
-                                                <input type="file" class="form-control" id="profile_picture" name="profile_picture" accept="image/*">
-                                                {% if profile.profile_picture %}
-                                                <small class="text-muted">Current: {{ profile.profile_picture.name|slice:"20:" }}</small>
-                                                {% endif %}
+    
+                                        <!-- Profile Picture -->
+                                        <div class="mb-4">
+                                            <label class="form-label">Profile Picture</label>
+        
+                                            {% if profile.profile_picture %}
+                                            <div class="image-preview-container mb-2" id="profilePicturePreview">
+                                                <img src="{{ profile.profile_picture.url }}" alt="Current Profile Picture" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
+                                                <button type="button" class="btn btn-danger btn-sm ms-2 delete-img-btn" id="deleteProfileBtn">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
                                             </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label for="banner_image" class="form-label">Banner Image</label>
-                                                <input type="file" class="form-control" id="banner_image" name="banner_image" accept="image/*">
-                                                {% if profile.banner_image %}
-                                                <small class="text-muted">Current: {{ profile.banner_image.url|slice:"20:" }}</small>
-                                                {% endif %}
+                                            {% endif %}
+        
+                                            <input type="file" class="form-control" id="profile_picture" name="profile_picture" accept="image/*">
+                                            <input type="hidden" id="delete_profile_picture" name="delete_profile_picture" value="false">
+                                            <small class="text-muted">Max size: 2MB. Formats: JPG, PNG, GIF</small>
+                                        </div>
+    
+                                        <!-- Banner Image -->
+                                        <div class="mb-3">
+                                            <label class="form-label">Banner Image</label>
+        
+                                            {% if profile.banner_image %}
+                                            <div class="image-preview-container mb-2" id="bannerImagePreview">
+                                                <img src="{{ profile.banner_image.url }}" alt="Current Banner" class="img-thumbnail" style="max-width: 300px; max-height: 100px; object-fit: cover;">
+                                                <button type="button" class="btn btn-danger btn-sm ms-2 delete-img-btn" id="deleteBannerBtn">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
                                             </div>
+                                            {% endif %}
+        
+                                            <input type="file" class="form-control" id="banner_image" name="banner_image" accept="image/*">
+                                            <input type="hidden" id="delete_banner_image" name="delete_banner_image" value="false">
+                                            <small class="text-muted">Max size: 2MB. Formats: JPG, PNG, GIF</small>
                                         </div>
                                     </div>
 
@@ -149,14 +179,12 @@
                             </div>
                         </div>
 
-                        <!-- Security Settings Tab -->
                         <div class="tab-pane fade" id="security">
                             <div class="card-header">
                                 <h5 class="mb-0">Security Settings</h5>
                             </div>
                             <div class="card-body">
                                 <div class="form-section">
-                                    <!-- In the security settings tab, replace the current change password button with: -->
                                     <h6 class="section-title">Change Password</h6>
                                     <a href="{% url 'change_password' %}" class="btn btn-primary">
                                         Change Password
@@ -182,16 +210,16 @@
         </div>
     </div>
     
-    <!-- Footer Section -->
     <section class="footer_section">
         <div class="container">
             <p>&copy; <span id="displayYear"></span> All rights reserved LinkedHub.</p>
         </div>
     </section>
     
-    <!-- Scripts -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="text/javascript" src="{% static 'js/account_settings.js' %}"></script>
-    <script src="{% static 'js/displayYear.js' %}"></script>
+    <script text="text/javascript" src="{% static 'js/displayYear.js' %}"></script>
+    <!-- External Account Settings JS - Load with defer to ensure DOM is ready -->
+    <script src="{% static 'js/account_settings.js' %}" defer></script>
 </body>
 </html>
