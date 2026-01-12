@@ -1,5 +1,5 @@
 """
-Django settings for linkedHub project.
+Django settings for linkedHub project - Production Ready.
 """
 
 from pathlib import Path
@@ -15,18 +15,33 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = config('DEBUG', default=False, cast=bool)
+
+# Allowed hosts - MUST be configured in production
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
+
+# CSRF Trusted Origins - Add your production domain
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='http://localhost:8000,http://127.0.0.1:8000',
+    cast=Csv()
+)
 
 #-------------------------------------------------------------------------------------------------------
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+# Security settings - ENABLED for production
+SECURE_BROWSER_XSS_FILTER = config('SECURE_BROWSER_XSS_FILTER', default=not DEBUG, cast=bool)
+SECURE_CONTENT_TYPE_NOSNIFF = config('SECURE_CONTENT_TYPE_NOSNIFF', default=not DEBUG, cast=bool)
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=not DEBUG, cast=bool)
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=not DEBUG, cast=bool)
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=not DEBUG, cast=bool)
 
-#-------------------------------------------------------------------------------------------------------
-# Security settings - disabled for local development
-SECURE_BROWSER_XSS_FILTER = False
-SECURE_CONTENT_TYPE_NOSNIFF = False
-SECURE_SSL_REDIRECT = False
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
+# Additional security headers for production
+if not DEBUG:
+    SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=31536000, cast=int)  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=True, cast=bool)
+    SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', default=True, cast=bool)
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_REFERRER_POLICY = 'same-origin'
 
 #-----------------------------------------------------------
 PASSWORD_HASHERS = [
@@ -95,7 +110,7 @@ TEMPLATES = [{
 
 WSGI_APPLICATION = 'linkedHub.wsgi.application'
 
-# Database - Local PostgreSQL
+# Database
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -106,6 +121,7 @@ DATABASES = {
         'PORT': config('DB_PORT', default='5432'),
     }
 }
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -125,7 +141,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+TIME_ZONE = config('TIME_ZONE', default='UTC')
 USE_I18N = True
 USE_TZ = True
 
@@ -137,34 +153,26 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
-# WhiteNoise configuration for static files
-#STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-#WHITENOISE_MAX_AGE = 0  # No caching for development
-#WHITENOISE_USE_FINDERS = True
-#WHITENOISE_MANIFEST_STRICT = False
-
 # Add static file finders
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 
-# Storage configuration - IMPORTANT: Separate static and media
-
-# Try with simpler WhiteNoise storage first
+# Storage configuration - Separate static and media files
 STORAGES = {
-    "default": {  # For media files (user uploads)
+    "default": {  # For media files (user uploads) - S3
         "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
     },
-    "staticfiles": {  # For static files - simpler version without manifest
+    "staticfiles": {  # For static files - WhiteNoise
         "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
 
 # WhiteNoise configuration
 WHITENOISE_MANIFEST_STRICT = False  # Don't fail on missing files
-WHITENOISE_AUTOREFRESH = False  # No auto-refresh in production
-WHITENOISE_MAX_AGE = 31536000  # Cache static files for 1 year
+WHITENOISE_AUTOREFRESH = DEBUG  # Only auto-refresh in development
+WHITENOISE_MAX_AGE = 31536000 if not DEBUG else 0  # Cache static files for 1 year in production
 
 # AWS S3 Settings for Media Files ONLY
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
@@ -177,8 +185,10 @@ AWS_S3_OBJECT_PARAMETERS = {
 }
 AWS_S3_FILE_OVERWRITE = False
 AWS_QUERYSTRING_AUTH = False
+AWS_DEFAULT_ACL = None  # Use bucket's default ACL
+AWS_S3_SIGNATURE_VERSION = 's3v4'
 
-# Media files configuration - S3 for user upload
+# Media files configuration - S3 for user uploads
 MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
 
 # Default primary key field type
@@ -194,7 +204,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # Allauth settings
-SITE_ID = 2  # Changed to 1 for local development
+SITE_ID = config('SITE_ID', default=1, cast=int)
 
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = 'send_otp'
@@ -250,12 +260,24 @@ EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
+SERVER_EMAIL = config('SERVER_EMAIL', default=EMAIL_HOST_USER)
 
 OTP_EMAIL_SENDER = config('EMAIL_HOST_USER', default='')
 OTP_EMAIL_SUBJECT = 'Your OTP Code'
 
 # OTP settings
 OTP_LOGIN_URL = '/send-otp/'
+
+# Session settings
+SESSION_COOKIE_AGE = config('SESSION_COOKIE_AGE', default=1209600, cast=int)  # 2 weeks
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# CSRF settings
+CSRF_COOKIE_HTTPONLY = False  # Must be False for AJAX
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_USE_SESSIONS = False
 
 # Logging configuration
 LOGGING = {
@@ -266,22 +288,75 @@ LOGGING = {
             'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
             'style': '{',
         },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
     },
     'handlers': {
         'console': {
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
+            'maxBytes': 1024 * 1024 * 15,  # 15MB
+            'backupCount': 10,
+            'formatter': 'verbose',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'filters': ['require_debug_false'],
             'formatter': 'verbose',
         },
     },
     'root': {
         'handlers': ['console'],
-        'level': 'DEBUG',
+        'level': 'INFO',
     },
     'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': config('DJANGO_LOG_LEVEL', default='INFO'),
+            'propagate': False,
+        },
         'django.db.backends': {
-            'level': 'INFO',
+            'level': 'WARNING' if not DEBUG else 'DEBUG',
             'handlers': ['console'],
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console', 'file', 'mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['console', 'file'],
+            'level': 'WARNING',
             'propagate': False,
         },
     },
 }
+
+# Create logs directory if it doesn't exist
+LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+if not os.path.exists(LOGS_DIR):
+    os.makedirs(LOGS_DIR)
+
+# Admin email for error notifications
+ADMINS = [
+    ('Admin', config('ADMIN_EMAIL', default='admin@example.com')),
+]
+MANAGERS = ADMINS
