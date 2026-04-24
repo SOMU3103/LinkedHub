@@ -73,7 +73,7 @@ pip install -r requirements.txt
 ```
 
 ### 4️⃣ Set Up Environment Variables
-Create a `.env` file in the root directory and add your configuration (e.g., Database, S3 keys, Secret Key).
+Create a `.env` file in the root directory and add your configuration (e.g., PSQL,MYSQL, FOR PRODUCTION USE AWS EC2-S3)
 
 ### 5️⃣ Run Migrations
 ```bash
