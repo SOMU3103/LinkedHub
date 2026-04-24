@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="static/images/logo.png" alt="Logo" />
+  <img src="static/images/logo.png" alt="Logo" width="300"/>
   <p><em>A Comprehensive Platform for Students & Professionals</em></p>
   
   <p>
