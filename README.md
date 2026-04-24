@@ -27,9 +27,6 @@
 **[💡 Request Feature](https://github.com/SOMU3103/LinkedHub/issues)**
 
 <br/>
-
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=18&pause=1000&color=36BCF7&center=true&vCenter=true&width=600&lines=Connect+People+Through+Tasks+%26+Knowledge;Build+Your+Professional+Profile;Find+Gigs+%26+Share+Study+Materials;Students+%2B+Professionals+%3D+LinkedHub+🚀" alt="Typing SVG" />
-
 </div>
 
 ---
