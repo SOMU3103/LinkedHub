@@ -151,7 +151,6 @@ Secure and smooth user experience:
 
 <br/>
 
-> 🎥 *Full project walkthrough video coming soon — stay tuned!*
 
 </div>
 
