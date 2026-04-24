@@ -147,7 +147,7 @@ Secure and smooth user experience:
 
 <br/>
 
-[![Watch Demo Video](https://img.shields.io/badge/▶️%20Watch%20Demo-blue?style=for-the-badge&logo=youtube&logoColor=white)](#)
+[![Watch Demo Video](https://img.shields.io/badge/%20Watch%20Demo-blue?style=for-the-badge&logo=youtube&logoColor=white)](#)
 
 <br/>
 
