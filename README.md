@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12,20,24&height=220&section=header&text=LinkedHub&fontSize=70&fontColor=fff&animation=twinkling&fontAlignY=40&desc=A%20Comprehensive%20Platform%20for%20Students%20%26%20Professionals&descAlignY=58&descAlign=50" width="100%"/>
+<img src="static/images/logo.png" alt="Logo" width="350"/>
 
 <br/>
 
