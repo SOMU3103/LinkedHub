@@ -147,9 +147,7 @@ Secure and smooth user experience:
 
 <br/>
 
-[![Watch Demo Video](https://img.shields.io/badge/▶️%20Watch%20Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](#)
-&nbsp;&nbsp;
-[![Live Preview](https://img.shields.io/badge/🌐%20Live%20Preview-Coming%20Soon-092E20?style=for-the-badge&logo=django&logoColor=white)](#)
+[![Watch Demo Video](https://img.shields.io/badge/▶️%20Watch%20Demo-blue?style=for-the-badge&logo=youtube&logoColor=white)](#)
 
 <br/>
 
