@@ -27,6 +27,9 @@
 **[💡 Request Feature](https://github.com/SOMU3103/LinkedHub/issues)**
 
 <br/>
+
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=18&pause=1000&color=36BCF7&center=true&vCenter=true&width=600&lines=Connect+People+Through+Tasks+%26+Knowledge;Build+Your+Professional+Profile;Find+Gigs+%26+Share+Study+Materials;Students+%2B+Professionals+%3D+LinkedHub+🚀" alt="Typing SVG" />
+
 </div>
 
 ---
@@ -36,7 +39,7 @@
 - [About LinkedHub](#-about-linkedhub)
 - [Key Features](#-key-features)
 - [Tech Stack](#-tech-stack)
-- [Screenshots](#-screenshots)
+- [Project Preview](#-project-preview)
 - [Getting Started](#-getting-started)
 - [Project Structure](#-project-structure)
 - [Contributing](#-contributing)
@@ -140,19 +143,19 @@ Secure and smooth user experience:
 
 ---
 
-## 📸 Screenshots
+## 🎬 Project Preview
 
 <div align="center">
 
-| 🏠 Home / Feed | 👤 Profile Page |
-|:--------------:|:---------------:|
-| ![Home](https://placehold.co/500x300/0d1117/36BCF7?text=🏠+Home+Feed&font=montserrat) | ![Profile](https://placehold.co/500x300/0d1117/2ea44f?text=👤+User+Profile&font=montserrat) |
+<br/>
 
-| 📝 Task Board | 📚 Study Materials |
-|:-------------:|:-----------------:|
-| ![Tasks](https://placehold.co/500x300/0d1117/FF9900?text=📝+Task+Board&font=montserrat) | ![Study](https://placehold.co/500x300/0d1117/a29bfe?text=📚+Study+Hub&font=montserrat) |
+[![Watch Demo Video](https://img.shields.io/badge/▶️%20Watch%20Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](#)
+&nbsp;&nbsp;
+[![Live Preview](https://img.shields.io/badge/🌐%20Live%20Preview-Coming%20Soon-092E20?style=for-the-badge&logo=django&logoColor=white)](#)
 
-> 📷 *Replace placeholders with real screenshots of your running app for best results!*
+<br/>
+
+> 🎥 *Full project walkthrough video coming soon — stay tuned!*
 
 </div>
 
