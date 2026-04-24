@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="static/images/logo.png" alt="Logo" width="150"/>
-  <h1>🌟 LinkedHub 🌟</h1>
+  <img src="static/images/logo.png" alt="Logo" />
   <p><em>A Comprehensive Platform for Students & Professionals</em></p>
   
   <p>
