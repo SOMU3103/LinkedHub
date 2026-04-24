@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://img.icons8.com/color/150/000000/django.png" alt="Django Logo"/>
+  <img src="static/images/logo.png" alt="Logo" width="150"/>
   <h1>🌟 LinkedHub 🌟</h1>
   <p><em>A Comprehensive Platform for Students & Professionals</em></p>
   
