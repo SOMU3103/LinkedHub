@@ -147,7 +147,7 @@ Secure and smooth user experience:
 
 <br/>
 
-[![Watch Demo Video](https://img.shields.io/badge/%20Watch%20Demo-blue?style=for-the-badge&logo=youtube&logoColor=white)](#)
+[![Watch Demo Video](https://img.shields.io/badge/%20Watch%20Demo-blue?style=for-the-badge&logo=youtube&logoColor=white)](https://www.linkedin.com/posts/somnath312006_python-django-fullstackdevelopment-ugcPost-7458781786232475648-frw4?utm_source=share&utm_medium=member_desktop&rcm=ACoAAEjLTisBmFHGQtwYVSpm0pySXGZC2Bg1fi0)
 
 <br/>
 
